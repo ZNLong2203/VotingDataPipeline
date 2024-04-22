@@ -10,8 +10,8 @@ def create_table(conn, cursor):
     cursor.execute(
         """
             CREATE TABLE IF NOT EXISTS candidates (
-                id VARCHAR(255) PRIMARY KEY,
-                name VARCHAR(255),
+                candidate_id VARCHAR(255) PRIMARY KEY,
+                candidate_name VARCHAR(255),
                 age INTEGER,
                 gender VARCHAR(255),
                 party VARCHAR(255),
@@ -23,8 +23,8 @@ def create_table(conn, cursor):
     cursor.execute(
         """
             CREATE TABLE IF NOT EXISTS voters (
-                id VARCHAR(255) PRIMARY KEY,
-                name VARCHAR(255),
+                voter_id VARCHAR(255) PRIMARY KEY,
+                voter_name VARCHAR(255),
                 age INTEGER,
                 gender VARCHAR(255),
                 email VARCHAR(255),
@@ -37,8 +37,8 @@ def create_table(conn, cursor):
     cursor.execute(
         """
             CREATE TABLE IF NOT EXISTS votes (
-                candidate_id VARCHAR(255) REFERENCES candidates(id) UNIQUE,
-                voter_id VARCHAR(255) REFERENCES voters(id) UNIQUE,
+                candidate_id VARCHAR(255) REFERENCES candidates(candidate_id) UNIQUE,
+                voter_id VARCHAR(255) REFERENCES voters(voter_id) UNIQUE,
                 voting_time TIMESTAMP,
                 vote INTEGER DEFAULT 0
             );
@@ -62,7 +62,7 @@ def generate_candidate(cursor, i):
         image_url = response["picture"]["large"]
 
         cursor.execute("""
-            INSERT INTO candidates (id, name, age, gender, party, image_url)
+            INSERT INTO candidates (candidate_id, candidate_name, age, gender, party, image_url)
             VALUES(%s, %s, %s, %s, %s, %s);
             """, (id, name, age, gender, party, image_url)
         )
@@ -77,8 +77,8 @@ def generate_voter(cursor):
 
         # Inserting data into the voters table
         voter_data = {
-            "id": response["login"]["uuid"],
-            "name": f"{response['name']['first']} {response['name']['last']}",
+            "voter_id": response["login"]["uuid"],
+            "voter_name": f"{response['name']['first']} {response['name']['last']}",
             "age": response["dob"]["age"],
             "gender": response["gender"],
             "email": response["email"],
@@ -87,9 +87,9 @@ def generate_voter(cursor):
         }
 
         cursor.execute("""
-            INSERT INTO voters (id, name, age, gender, email, phone, address)
+            INSERT INTO voters (voter_id, voter_name, age, gender, email, phone, address)
             VALUES (%s, %s, %s, %s, %s, %s, %s);
-        """, (voter_data["id"], voter_data["name"], voter_data["age"], voter_data["gender"], voter_data["email"], voter_data["phone"], voter_data["address"])
+        """, (voter_data["voter_id"], voter_data["voter_name"], voter_data["age"], voter_data["gender"], voter_data["email"], voter_data["phone"], voter_data["address"])
         )
         postgres_conn.commit()
 
@@ -97,7 +97,7 @@ def generate_voter(cursor):
         producer = Producer({
             'bootstrap.servers': 'localhost:9092'
         })
-        producer.produce("voters_topic", key=voter_data['id'], value=json.dumps(voter_data))
+        producer.produce("voters_topic", key=voter_data['voter_gitid'], value=json.dumps(voter_data))
         producer.flush()
     else:
         print("Error: ", response.status_code)

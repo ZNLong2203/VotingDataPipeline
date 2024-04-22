@@ -12,7 +12,7 @@ if __name__ == "__main__":
         spark = SparkSession.builder.appName("SparkStreaming") \
                 .master("local[*]") \
                 .config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.13:3.5.0") \
-                .config("spark.jars", "") \
+                .config("spark.jars", "jars/postgresql-42.7.3.jar") \
                 .config("spark.sql.adaptive.enabled", "false") \
                 .getOrCreate()
 
