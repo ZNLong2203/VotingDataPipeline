@@ -12,8 +12,8 @@ def create_table(conn, cursor):
             CREATE TABLE IF NOT EXISTS candidates (
                 candidate_id VARCHAR(255) PRIMARY KEY,
                 candidate_name VARCHAR(255),
-                age INTEGER,
-                gender VARCHAR(255),
+                candidate_age INTEGER,
+                candidate_gender VARCHAR(255),
                 party VARCHAR(255),
                 image_url TEXT
             );
@@ -25,8 +25,8 @@ def create_table(conn, cursor):
             CREATE TABLE IF NOT EXISTS voters (
                 voter_id VARCHAR(255) PRIMARY KEY,
                 voter_name VARCHAR(255),
-                age INTEGER,
-                gender VARCHAR(255),
+                voter_age INTEGER,
+                voter_gender VARCHAR(255),
                 email VARCHAR(255),
                 phone VARCHAR(255),
                 address VARCHAR(255)
@@ -68,7 +68,7 @@ def generate_candidate(cursor, i):
         image_url = response["picture"]["large"]
 
         cursor.execute("""
-            INSERT INTO candidates (candidate_id, candidate_name, age, gender, party, image_url)
+            INSERT INTO candidates (candidate_id, candidate_name, candidate_age, candidate_gender, party, image_url)
             VALUES(%s, %s, %s, %s, %s, %s);
             """, (id, name, age, gender, party, image_url)
         )
@@ -85,17 +85,17 @@ def generate_voter(cursor):
         voter_data = {
             "voter_id": response["login"]["uuid"],
             "voter_name": f"{response['name']['first']} {response['name']['last']}",
-            "age": response["dob"]["age"],
-            "gender": response["gender"],
+            "voter_age": response["dob"]["age"],
+            "voter_gender": response["gender"],
             "email": response["email"],
             "phone": response["phone"],
             "address": f"{response['location']['street']['number']} {response['location']['street']['name']}, {response['location']['city']}, {response['location']['state']}, {response['location']['country']}"
         }
 
         cursor.execute("""
-            INSERT INTO voters (voter_id, voter_name, age, gender, email, phone, address)
+            INSERT INTO voters (voter_id, voter_name, voter_age, voter_gender, email, phone, address)
             VALUES (%s, %s, %s, %s, %s, %s, %s);
-        """, (voter_data["voter_id"], voter_data["voter_name"], voter_data["age"], voter_data["gender"], voter_data["email"], voter_data["phone"], voter_data["address"])
+        """, (voter_data["voter_id"], voter_data["voter_name"], voter_data["voter_age"], voter_data["voter_gender"], voter_data["email"], voter_data["phone"], voter_data["address"])
         )
         postgres_conn.commit()
 

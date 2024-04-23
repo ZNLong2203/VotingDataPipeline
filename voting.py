@@ -64,7 +64,7 @@ if __name__ == "__main__":
             chosen_candidate = random.choice(candidates)
             vote = voter | chosen_candidate | {
                 "voting_time": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
-                "vote": 0
+                "vote": 1
             }
             # print(vote)
 
@@ -73,7 +73,7 @@ if __name__ == "__main__":
                 """
                     INSERT INTO votes (candidate_id, voter_id, voting_time, vote)
                     VALUES (%s, %s, %s, %s);
-                """, (vote["candidate_id"], vote["id"], vote["voting_time"], vote["vote"])
+                """, (vote["candidate_id"], vote["voter_id"], vote["voting_time"], vote["vote"])
             )
             postgres_conn.commit()
 
@@ -82,8 +82,8 @@ if __name__ == "__main__":
                 'bootstrap.servers': 'localhost:9092'
             })
             producer.produce(
-                "voters_topic",
-                key=vote["id"],
+                "voting_topic",
+                key=vote["voter_id"],
                 value=json.dumps(vote),
                 on_delivery=delivery_report
             )
