@@ -1,4 +1,5 @@
 import json
+import os
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import from_json, col
 from pyspark.sql import functions as F
@@ -6,10 +7,16 @@ from pyspark.sql.types import StructType, StructField, StringType, IntegerType, 
 from datetime import datetime
 from confluent_kafka import Consumer
 
+spark_jars = ("{},{},{},{},{}".format(os.getcwd() + "spark_jars/spark_spark-sql-kafka-0-10_2.13-3.5.0.jar",
+                                      os.getcwd() + "spark_jars/kafka-clients-3.5.0.jar",
+                                      os.getcwd() + "spark_jars/spark-streaming-kafka-0-10-assembly_2.13-3.5.0.jar",
+                                      os.getcwd() + "spark_jars/commons-pool2-2.12.0.jar",
+                                      os.getcwd() + "spark_jars/spark-token-provider-kafka-0-10_2.13-3.5.0.jar"))
+
 if __name__ == "__main__":
     try:
         spark = SparkSession.builder.appName("SparkStreaming") \
-            .master("local[*]") \
+            .master("local") \
             .config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.13:3.5.0") \
             .config("spark.jars", "jars/postgresql-42.7.3.jar") \
             .config("spark.sql.adaptive.enabled", "false") \
@@ -30,7 +37,7 @@ if __name__ == "__main__":
             StructField("party", StringType()),
             StructField("image_url", StringType()),
             StructField("voting_time", TimestampType()),
-            StructField("votes", IntegerType())
+            StructField("vote", IntegerType())
         ])
 
         kafka_df = spark \
@@ -41,11 +48,11 @@ if __name__ == "__main__":
             .option("startingOffsets", "earliest") \
             .load() \
             .selectExpr("CAST(key AS STRING)", "CAST(value AS STRING)") \
-            .select(from_json(col("CAST(value AS STRING)"), schema).alias("data")) \
-            .select("data")
+            .select(from_json(col("value"), schema).alias("data")) \
+            .select("data.*")
 
-        kafka_df = kafka_df.withColumn("voting_time", col("data.voting_time").cast(TimestampType())) \
-            .withColumn('vote', col('data.vote').cast(IntegerType()))
+        kafka_df = kafka_df.withColumn("voting_time", col("voting_time").cast(TimestampType())) \
+            .withColumn('vote', col('vote').cast(IntegerType()))
         kafka_df = kafka_df.withWatermark("voting_time", "1 minute")
 
         votes_per_candidate = kafka_df.groupBy("candidate_id", "candidate_name", "party").agg(
