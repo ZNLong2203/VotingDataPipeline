@@ -37,8 +37,8 @@ def create_table(conn, cursor):
     cursor.execute(
         """
             CREATE TABLE IF NOT EXISTS votes (
-                candidate_id VARCHAR(255) REFERENCES candidates(candidate_id) UNIQUE,
-                voter_id VARCHAR(255) REFERENCES voters(voter_id) UNIQUE,
+                candidate_id VARCHAR(255),
+                voter_id VARCHAR(255) UNIQUE, -- One vote per voter
                 voting_time TIMESTAMP,
                 vote INTEGER DEFAULT 0
             );
@@ -46,6 +46,12 @@ def create_table(conn, cursor):
     )
 
     conn.commit()
+
+def delivery_report(err, msg):
+    if err is not None:
+        print(f'Message delivery failed: {err}')
+    else:
+        print(f'Message delivered to {msg.topic()} [{msg.partition()}]')
 
 def generate_candidate(cursor, i):
     response = requests.get(URL)
@@ -97,7 +103,12 @@ def generate_voter(cursor):
         producer = Producer({
             'bootstrap.servers': 'localhost:9092'
         })
-        producer.produce("voters_topic", key=voter_data['voter_gitid'], value=json.dumps(voter_data))
+        producer.produce(
+            "voters_topic",
+            key=voter_data["voter_id"],
+            value=json.dumps(voter_data),
+            on_delivery=delivery_report
+        )
         producer.flush()
     else:
         print("Error: ", response.status_code)
