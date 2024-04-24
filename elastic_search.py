@@ -22,7 +22,7 @@ if __name__ == "__main__":
 
         # Poll for new messages
         while True:
-            msg = consumer.poll(timeout=2.0)
+            msg = consumer.poll(timeout=5.0)
             if msg is None:
                 print("No new messages")
                 continue
@@ -34,7 +34,7 @@ if __name__ == "__main__":
             message_data = json.loads(msg.value().decode('utf-8'))
 
             # Insert the data into Elasticsearch
-            es.index(index='votes', id="Voting_Pipeline", body=message_data)
+            es.index(index='votes', body=message_data)
 
     except Exception as e:
         print(e)

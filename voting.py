@@ -50,7 +50,7 @@ if __name__ == "__main__":
         consumer.subscribe(['voters_topic'])
 
         while True:
-            msg = consumer.poll(timeout=2.0)
+            msg = consumer.poll(timeout=5.0)
             if msg is None:
                 print("No new messages")
                 continue

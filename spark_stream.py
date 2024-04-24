@@ -16,28 +16,28 @@ spark_jars = ("{},{},{},{},{}".format(os.getcwd() + "spark_jars/spark_spark-sql-
 if __name__ == "__main__":
     try:
         spark = SparkSession.builder.appName("SparkStreaming") \
-            .master("local") \
+            .master("local[*]") \
             .config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.13:3.5.0") \
             .config("spark.jars", "jars/postgresql-42.7.3.jar") \
             .config("spark.sql.adaptive.enabled", "false") \
             .getOrCreate()
 
         schema = StructType([
-            StructField("voter_id", StringType()),
-            StructField("voter_name", StringType()),
-            StructField("voter_age", IntegerType()),
-            StructField("voter_gender", StringType()),
-            StructField("email", StringType()),
-            StructField("phone", StringType()),
-            StructField("address", StringType()),
-            StructField("candidate_id", StringType()),
-            StructField("candidate_name", StringType()),
-            StructField("candidate_age", IntegerType()),
-            StructField("candidate_gender", StringType()),
-            StructField("party", StringType()),
-            StructField("image_url", StringType()),
-            StructField("voting_time", TimestampType()),
-            StructField("vote", IntegerType())
+            StructField("voter_id", StringType(), True),
+            StructField("voter_name", StringType(), True),
+            StructField("voter_age", IntegerType(), True),
+            StructField("voter_gender", StringType(), True),
+            StructField("email", StringType(), True),
+            StructField("phone", StringType(), True),
+            StructField("address", StringType(), True),
+            StructField("candidate_id", StringType(), True),
+            StructField("candidate_name", StringType(), True),
+            StructField("candidate_age", IntegerType(), True),
+            StructField("candidate_gender", StringType(), True),
+            StructField("party", StringType(), True),
+            StructField("image_url", StringType(), True),
+            StructField("voting_time", TimestampType(), True),
+            StructField("vote", IntegerType(), True)
         ])
 
         kafka_df = spark \
@@ -46,6 +46,7 @@ if __name__ == "__main__":
             .option("kafka.bootstrap.servers", "localhost:9092") \
             .option("subscribe", "voting_topic") \
             .option("startingOffsets", "earliest") \
+            .option("failOnDataLoss", "false") \
             .load() \
             .selectExpr("CAST(key AS STRING)", "CAST(value AS STRING)") \
             .select(from_json(col("value"), schema).alias("data")) \
@@ -58,11 +59,12 @@ if __name__ == "__main__":
         # Using map_reduce to get the votes per candidate
         votes_per_candidate = kafka_df.groupBy("candidate_id", "candidate_name", "party").agg(
             F.sum("vote").alias("votes"))
+        # votes_by_gender = kafka_df.groupBy("candidate_id", "candidate_name", "party", "voter_gender").count().alias("votes")
 
         # Create a temporary view to query the data
         kafka_df.createOrReplaceTempView("kafka_df_view")
         votes_by_gender = spark.sql("""
-            SELECT candidate_id, candidate_name, party, voter_gender, COUNT(vote) as votes
+            SELECT candidate_id, candidate_name, party, voter_gender, COUNT(candidate_id) as votes
             FROM kafka_df_view
             GROUP BY candidate_id, candidate_name, party, voter_gender;
         """)

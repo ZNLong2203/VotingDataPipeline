@@ -155,5 +155,5 @@ cython_debug/
 # Node.js
 node_modules/
 .idea/
-tmp/checkpoint1/
-tmp/checkpoint2/
+#tmp/checkpoint1/
+#tmp/checkpoint2/
