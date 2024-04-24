@@ -30,8 +30,8 @@ voting data and produce a new topics name voting_topic on Kafka
 ### ElasticVue
 ![elastic_vue.png](img%2Felastic_vue.png)
 
-### voters_topic
+### voting_topic
 ![voting_topic_data.png](img%2Fvoting_topic_data.png)
 
-### voting_topic
+### voters_topic
 ![votes_topic_data.png](img%2Fvotes_topic_data.png)
