@@ -7,11 +7,11 @@ This repository contains the code for a realtime election voting system. The sys
 ![SystemArchitecture.png](img%2FSystemArchitecture.png)
 
 ## System Components
-1. `data_api.py:` This is the Python script that creates the required tables on Postgres(Candidates, voters and votes), its also
+1. `data_api.py` This is the Python script that creates the required tables on Postgres(Candidates, voters and votes), its also
 create the Kafka topic and produce messages to the votes_topic.
-2. `voting.py:` This is the Python script that contains the logics to consume the votes message from the Kafka topic (voters_topic), generate
+2. `voting.py` This is the Python script that contains the logics to consume the votes message from the Kafka topic (voters_topic), generate
 voting data and produce a new topics name voting_topic on Kafka
-3. `spark_streaming.py:` This is the Python script that contains the logic to consume the votes from the Kafka topic (voting_data), enrich the data from postgres and aggregate the votes and produce data to specific topics on Kafka.
+3. `spark_streaming.py` This is the Python script that contains the logic to consume the votes from the Kafka topic (voting_data), enrich the data from postgres and aggregate the votes and produce data to specific topics on Kafka.
 4. `elastic_search.py` This is the Python script that transfers the data from kafka topics insert into ElasticSearch and visualize the data using ElasticVue
 ## Some commands interact with data in docker
 
