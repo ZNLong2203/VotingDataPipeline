@@ -55,10 +55,17 @@ if __name__ == "__main__":
             .withColumn('vote', col('vote').cast(IntegerType()))
         kafka_df = kafka_df.withWatermark("voting_time", "1 minute")
 
+        # Using map_reduce to get the votes per candidate
         votes_per_candidate = kafka_df.groupBy("candidate_id", "candidate_name", "party").agg(
             F.sum("vote").alias("votes"))
 
-        votes_by_gender = kafka_df.groupBy("voter_gender").count().alias("votes")
+        # Create a temporary view to query the data
+        kafka_df.createOrReplaceTempView("kafka_df_view")
+        votes_by_gender = spark.sql("""
+            SELECT candidate_id, candidate_name, party, voter_gender, COUNT(vote) as votes
+            FROM kafka_df_view
+            GROUP BY candidate_id, candidate_name, party, voter_gender;
+        """)
 
         votes_per_candidate_to_kafka = votes_per_candidate \
             .selectExpr("to_json(struct(*)) AS value") \
